@@ -1,0 +1,285 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base responsive typography */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Custom styles for html5-qrcode */
+#qr-reader, #qr-login-reader {
+  width: 100% !important;
+}
+
+#qr-reader > div, #qr-login-reader > div {
+  margin: 0 auto !important;
+}
+
+#qr-reader video, #qr-login-reader video {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+}
+
+#qr-reader canvas, #qr-login-reader canvas {
+  display: none !important;
+}
+
+/* Ensure the scanner container is properly sized */
+#qr-reader__dashboard_section, #qr-login-reader__dashboard_section {
+  display: none !important;
+}
+
+#qr-reader__header_message, #qr-login-reader__header_message {
+  display: none !important;
+}
+
+#qr-reader__camera_selection, #qr-login-reader__camera_selection {
+  display: none !important;
+}
+
+#qr-reader__scan_region, #qr-login-reader__scan_region {
+  border: 2px solid #3B82F6 !important;
+  border-radius: 8px !important;
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive utilities */
+@media (max-width: 767px) {
+  .text-responsive {
+    font-size: 0.75rem;
+  }
+  
+  .p-responsive {
+    padding: 0.75rem;
+  }
+  
+  .space-y-responsive > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  /* Mobile-specific utilities */
+  .mobile-text-xs {
+    font-size: 0.625rem;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-p-2 {
+    padding: 0.5rem;
+  }
+  
+  .mobile-p-3 {
+    padding: 0.75rem;
+  }
+  
+  .mobile-space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .mobile-space-x-2 > * + * {
+    margin-left: 0.5rem;
+  }
+}
+
+/* Tablet responsive design */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet-grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .tablet-grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .tablet-text-base {
+    font-size: 1rem;
+  }
+  
+  .tablet-p-4 {
+    padding: 1rem;
+  }
+}
+
+/* Desktop responsive design */
+@media (min-width: 1024px) {
+  .lg\:ml-0 {
+    margin-left: 0 !important;
+  }
+  
+  /* Ensure sidebar takes full height and is sticky */
+  .sidebar-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+/* Ensure proper mobile layout */
+@media (max-width: 1023px) {
+  .mobile-full-width {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* Sidebar transition improvements */
+.sidebar-transition {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Better mobile touch targets */
+@media (max-width: 768px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .touch-target {
+    padding: 12px;
+  }
+  
+  /* Improved mobile button spacing */
+  .mobile-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .mobile-btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Mobile table improvements */
+  .mobile-table {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-table th,
+  .mobile-table td {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* Mobile card improvements */
+  .mobile-card {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .mobile-card-header {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Improved responsive grid system */
+.responsive-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Responsive spacing system */
+.responsive-spacing {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .responsive-spacing {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-spacing {
+    padding: 2rem;
+  }
+  
+  /* Desktop-specific utilities */
+  .desktop-text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .desktop-text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .desktop-p-6 {
+    padding: 1.5rem;
+  }
+  
+  .desktop-p-8 {
+    padding: 2rem;
+  }
+}
