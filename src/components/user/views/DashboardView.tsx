@@ -281,6 +281,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 level="M"
                 includeMargin={true}
                 className="block w-20 h-20 sm:w-24 sm:h-24 lg:w-[120px] lg:h-[120px]"
+                onViewAttendance={() => navigate('/user/riwayat-absensi')}
               />
             </div>
             <div>

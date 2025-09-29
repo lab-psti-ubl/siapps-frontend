@@ -33,16 +33,4 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-build: {
-    // Minify and obfuscate code in production
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console statements
-        drop_debugger: true, // Remove debugger statements
-      },
-      
-    },
-    
-  }
 });

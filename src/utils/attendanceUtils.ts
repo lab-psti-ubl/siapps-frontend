@@ -32,24 +32,21 @@ export function getWorkSettings(): WorkSettings {
 
 
 export function getCurrentTime(): string {
-  // Get current time in Jakarta timezone (UTC+7)
+  // Use server time - this will be handled by the server
   const now = new Date();
-  const jakartaTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)); // Add 7 hours for WIB
-  return `${jakartaTime.getUTCHours().toString().padStart(2, '0')}:${jakartaTime.getUTCMinutes().toString().padStart(2, '0')}`;
+  return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 }
 
 export function getCurrentDateJakarta(): string {
-  // Get current date in Jakarta timezone (UTC+7)
+  // Use server date - this will be handled by the server
   const now = new Date();
-  const jakartaTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)); // Add 7 hours for WIB
-  return jakartaTime.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+  return now.toISOString().split('T')[0]; // Return YYYY-MM-DD format
 }
 
 export function getCurrentDateTimeJakarta(): string {
-  // Get current datetime in Jakarta timezone (UTC+7)
+  // Use server datetime - this will be handled by the server
   const now = new Date();
-  const jakartaTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)); // Add 7 hours for WIB
-  return jakartaTime.toISOString();
+  return now.toISOString();
 }
 
 export function timeToMinutes(timeString: string): number {

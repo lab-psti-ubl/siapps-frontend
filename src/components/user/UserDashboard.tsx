@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Layout } from '../layout';
 import { AttendanceRecord, LeaveRequest } from './types';
 import { attendanceAPI, leaveRequestsAPI } from '../../services/api';
-import Sidebar from './components/Sidebar';
 import DashboardView from './views/DashboardView';
 import AttendanceView from './views/AttendanceView';
-import AbsenMasukView from './views/AbsenMasukView';
-import AbsenKeluarView from './views/AbsenKeluarView';
+import AbsenMasukView from './views/absen-masuk/AbsenMasukView';
+import AbsenKeluarView from './views/absen-keluar/AbsenKeluarView';
 import AbsenSekarangView from './views/AbsenSekarangView';
-import SalaryView from './views/SalaryView';
 import ProfileView from './views/ProfileView';
-import NotificationBell from './components/NotificationBell';
+import SalaryView from './views/SalaryView';
 import NotificationToast from './components/NotificationToast';
 
 const UserDashboard: React.FC = () => {
-  const [activeMenu, setActiveMenu] = useState('dashboard');
   const [attendanceSubmenu, setAttendanceSubmenu] = useState(false);
   const [userAttendance, setUserAttendance] = useState<AttendanceRecord[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,6 +25,16 @@ const UserDashboard: React.FC = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get current menu from URL
+  const getCurrentMenu = () => {
+    const path = location.pathname.split('/').pop();
+    return path || 'dashboard';
+  };
+
+  const activeMenu = getCurrentMenu();
 
   // Auto hide notification after 4 seconds
   useEffect(() => {
@@ -140,7 +148,7 @@ const UserDashboard: React.FC = () => {
   };
 
   const handleAttendanceMenuClick = () => {
-    setActiveMenu('attendance');
+    navigate('/user/riwayat-absensi');
     setAttendanceSubmenu(!attendanceSubmenu);
   };
 
@@ -172,7 +180,7 @@ const UserDashboard: React.FC = () => {
       return;
     }
     
-    setActiveMenu('absen-masuk');
+    navigate('/user/absen-masuk');
     setAttendanceSubmenu(false);
     setSidebarOpen(false);
   };
@@ -211,13 +219,13 @@ const UserDashboard: React.FC = () => {
       return;
     }
     
-    setActiveMenu('absen-keluar');
+    navigate('/user/absen-keluar');
     setAttendanceSubmenu(false);
     setSidebarOpen(false);
   };
 
   const handleAbsenSekarangClick = () => {
-    setActiveMenu('absen-sekarang');
+    navigate('/user/ajukan-izin');
     setAttendanceSubmenu(false);
     setSidebarOpen(false);
   };
@@ -239,7 +247,7 @@ const UserDashboard: React.FC = () => {
         // Reload attendance data
         await updateAttendanceDataSilently();
         
-        setActiveMenu('dashboard');
+        navigate('/user/dashboard');
         
         // Show success notification
         const statusText = response.data.checkInStatus === 'on-time' ? 'tepat waktu' : 'terlambat';
@@ -268,7 +276,7 @@ const UserDashboard: React.FC = () => {
         // Reload attendance data
         await updateAttendanceDataSilently();
         
-        setActiveMenu('dashboard');
+        navigate('/user/dashboard');
         
         // Show success notification
         const statusText = response.data.checkOutStatus === 'on-time' ? 'tepat waktu' : 'pulang cepat';
@@ -295,7 +303,7 @@ const UserDashboard: React.FC = () => {
       console.log('Leave request response:', response);
       
       if (response.success) {
-        setActiveMenu('dashboard');
+        navigate('/user/dashboard');
         showNotification('success', '📝 Pengajuan izin berhasil dikirim! Menunggu persetujuan admin.');
         
         // Reload attendance data to show new leave records
@@ -313,7 +321,7 @@ const UserDashboard: React.FC = () => {
           showNotification('error', error.message);
         } else if (error.message.includes('success') || error.message.includes('berhasil')) {
           // Sometimes the API returns success message in error format
-          setActiveMenu('dashboard');
+          navigate('/user/dashboard');
           showNotification('success', '📝 Pengajuan izin berhasil dikirim! Menunggu persetujuan admin.');
           await updateAttendanceDataSilently();
         } else {
@@ -321,7 +329,7 @@ const UserDashboard: React.FC = () => {
         }
       } else {
         // If no specific error message, assume success since data was created
-        setActiveMenu('dashboard');
+        navigate('/user/dashboard');
         showNotification('success', '📝 Pengajuan izin berhasil dikirim! Menunggu persetujuan admin.');
         await updateAttendanceDataSilently();
       }
@@ -329,139 +337,88 @@ const UserDashboard: React.FC = () => {
   };
 
   const handleMenuChange = (menu: string) => {
-    setActiveMenu(menu);
+    navigate(`/user/${menu}`);
     setSidebarOpen(false);
   };
 
-  const renderContent = () => {
-    if (isInitialLoading) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      );
-    }
-
-    switch (activeMenu) {
-      case 'dashboard':
-        return (
-          <DashboardView 
-            currentUser={currentUser}
-            userAttendance={userAttendance}
-            todayAttendance={getTodayAttendance()}
-            onAbsenMasuk={handleAbsenMasukClick}
-            onAbsenKeluar={handleAbsenKeluarClick}
-            onViewAttendance={() => handleMenuChange('attendance')}
-          />
-        );
-      case 'absen-masuk':
-        return (
-          <AbsenMasukView
-            currentUser={currentUser}
-            todayAttendance={getTodayAttendance()}
-            onAttendanceSubmit={handleAttendanceSubmit}
-            onBackToDashboard={() => handleMenuChange('dashboard')}
-          />
-        );
-      case 'absen-keluar':
-        return (
-          <AbsenKeluarView
-            currentUser={currentUser}
-            todayAttendance={getTodayAttendance()}
-            onAttendanceUpdate={handleAttendanceUpdate}
-            onBackToDashboard={() => handleMenuChange('dashboard')}
-          />
-        );
-      case 'absen-sekarang':
-        return (
-          <AbsenSekarangView
-            currentUser={currentUser}
-            onLeaveRequestSubmit={handleLeaveRequestSubmit}
-            onBackToDashboard={() => handleMenuChange('dashboard')}
-          />
-        );
-      case 'attendance':
-        return <AttendanceView userAttendance={userAttendance} />;
-      case 'salary':
-        return <SalaryView currentUser={currentUser} />;
-      case 'profile':
-        return <ProfileView currentUser={currentUser} />;
-      default:
-        return (
-          <DashboardView 
-            currentUser={currentUser}
-            userAttendance={userAttendance}
-            todayAttendance={getTodayAttendance()}
-            onAbsenMasuk={handleAbsenMasukClick}
-            onAbsenKeluar={handleAbsenKeluarClick}
-            onViewAttendance={() => handleMenuChange('attendance')}
-          />
-        );
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex relative">
+    <>
       {/* Notification Toast */}
       <NotificationToast 
         notification={notification}
         onClose={() => setNotification(prev => ({ ...prev, show: false }))}
       />
 
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-40 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors touch-target"
-        >
-          {sidebarOpen ? (
-            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-          ) : (
-            <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-          )}
-        </button>
-        <h1 className="text-base sm:text-lg font-semibold text-gray-800 truncate mx-2">Sistem Absensi</h1>
-        <NotificationBell userId={currentUser.id} />
-      </div>
-
-      {/* Desktop Header with Notification */}
-      <div className="hidden lg:block fixed top-0 right-0 z-40 p-3 lg:p-4">
-        <NotificationBell userId={currentUser.id} />
-      </div>
-
-      {/* Sidebar Overlay for Mobile */}
-      {sidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40 w-56 sm:w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:h-screen
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        <Sidebar 
-          currentUser={currentUser}
-          activeMenu={activeMenu}
-          attendanceSubmenu={attendanceSubmenu}
-          onMenuChange={handleMenuChange}
-          onAttendanceMenuClick={handleAttendanceMenuClick}
-          onAbsenMasukClick={handleAbsenMasukClick}
-          onAbsenKeluarClick={handleAbsenKeluarClick}
-          onAbsenSekarangClick={handleAbsenSekarangClick}
-          onLogout={logout}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-0 lg:overflow-y-auto">
-        <div className="p-3 sm:p-4 lg:p-6 xl:p-8 pt-16 sm:pt-18 lg:pt-16 min-h-screen overflow-y-auto">
-          {renderContent()}
-        </div>
-      </div>
-    </div>
+      <Layout
+        userType="user"
+        currentUser={currentUser}
+        activeMenu={activeMenu}
+        attendanceSubmenu={attendanceSubmenu}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        onMenuChange={handleMenuChange}
+        onAttendanceMenuClick={handleAttendanceMenuClick}
+        onAbsenMasukClick={handleAbsenMasukClick}
+        onAbsenKeluarClick={handleAbsenKeluarClick}
+        onAbsenSekarangClick={handleAbsenSekarangClick}
+        onLogout={logout}
+        title="Sistem Absensi"
+      >
+        <Routes>
+          <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
+          <Route path="/dashboard" element={
+            isInitialLoading ? (
+              <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <DashboardView 
+                currentUser={currentUser}
+                userAttendance={userAttendance}
+                todayAttendance={getTodayAttendance()}
+                onAbsenMasuk={handleAbsenMasukClick}
+                onAbsenKeluar={handleAbsenKeluarClick}
+                onViewAttendance={() => navigate('/user/riwayat-absensi')}
+              />
+            )
+          } />
+          <Route path="/absen-masuk" element={
+            <AbsenMasukView
+              currentUser={currentUser}
+              todayAttendance={getTodayAttendance()}
+              onAttendanceSubmit={handleAttendanceSubmit}
+              onBackToDashboard={() => navigate('/user/dashboard')}
+            />
+          } />
+          <Route path="/absen-keluar" element={
+            <AbsenKeluarView
+              currentUser={currentUser}
+              todayAttendance={getTodayAttendance()}
+              onAttendanceUpdate={handleAttendanceUpdate}
+              onBackToDashboard={() => navigate('/user/dashboard')}
+            />
+          } />
+          <Route path="/ajukan-izin" element={
+            <AbsenSekarangView
+              currentUser={currentUser}
+              onLeaveRequestSubmit={handleLeaveRequestSubmit}
+              onBackToDashboard={() => navigate('/user/dashboard')}
+            />
+          } />
+          <Route path="/riwayat-absensi" element={
+            <AttendanceView userAttendance={userAttendance} />
+          } />
+          <Route path="/profil" element={
+            <ProfileView currentUser={currentUser} />
+          } />
+          <Route path="/data-gaji" element={
+            <SalaryView currentUser={currentUser} />
+          } />
+          <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
+        </Routes>
+      </Layout>
+    </>
   );
 };
 

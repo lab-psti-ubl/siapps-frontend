@@ -50,35 +50,3 @@ export interface UserNotification {
   read: boolean;
   data?: any;
 }
-
-export interface SalaryCalculation {
-  id: string;
-  employeeId: string;
-  employeeName: string;
-  month: string;
-  year: number;
-  basicSalary: number;
-  workingDays: number;
-  presentDays: number;
-  leaveDays: number;
-  absentDays: number;
-  totalLateMinutes: number;
-  totalEarlyLeaveMinutes: number;
-  lateBlocks: number;
-  earlyLeaveBlocks: number;
-  absentDeduction: number;
-  leaveDeduction: number;
-  lateDeduction: number;
-  earlyLeaveDeduction: number;
-  totalDeduction: number;
-  netSalary: number;
-  salarySettings: {
-    absentDeduction: number;
-    leaveDeduction: number;
-    lateDeduction: number;
-    earlyLeaveDeduction: number;
-    lateBlockMinutes: number;
-    earlyLeaveBlockMinutes: number;
-  };
-  createdAt: string;
-}

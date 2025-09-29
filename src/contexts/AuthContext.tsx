@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, AuthState } from '../types/auth';
 import { authAPI } from '../services/api';
 
@@ -25,6 +26,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentUser: null,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Load authentication state from sessionStorage on mount
   useEffect(() => {
@@ -42,6 +45,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 createdAt: new Date(parsedAuthState.currentUser.createdAt)
               } : null,
             });
+            
+            // Redirect to appropriate dashboard if on login page
+            if (location.pathname === '/login' || location.pathname === '/') {
+              if (parsedAuthState.userType === 'admin') {
+                navigate('/admin/dashboard', { replace: true });
+              } else if (parsedAuthState.userType === 'user') {
+                navigate('/user/dashboard', { replace: true });
+              }
+            }
           }
         }
       } catch (error) {
@@ -52,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     loadAuthState();
-  }, []);
+  }, [navigate, location.pathname]);
 
   const login = async (userType: 'admin' | 'user', credentials?: any) => {
     try {
@@ -68,13 +80,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const newAuthState = {
           isAuthenticated: true,
           userType: response.userType,
-          currentUser: response.user || null,
+          currentUser: response.user ? {
+            ...response.user,
+            createdAt: new Date(response.user.createdAt)
+          } : null,
         };
         
         setAuthState(newAuthState);
         
         // Persist auth state to sessionStorage (temporary session only)
         sessionStorage.setItem('auth-state', JSON.stringify(newAuthState));
+        
+        // Navigate to appropriate dashboard
+        if (response.userType === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+        } else if (response.userType === 'user') {
+          navigate('/user/dashboard', { replace: true });
+        }
       } else {
         throw new Error(response.message || 'Login failed');
       }
@@ -93,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setAuthState(newAuthState);
     sessionStorage.removeItem('auth-state');
+    navigate('/login', { replace: true });
   };
 
   return (

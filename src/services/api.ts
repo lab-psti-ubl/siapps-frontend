@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://siapps.psti-ubl.id/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Generic API request function
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
@@ -92,10 +92,19 @@ export const attendanceAPI = {
   getAll: (params?: { date?: string; employeeId?: string; month?: string; year?: string; page?: number; limit?: number }) => {
     const queryParams = new URLSearchParams();
     if (params?.date) {
-      // Ensure date is in YYYY-MM-DD format
-      const formattedDate = new Date(params.date).toISOString().split('T')[0];
-      queryParams.append('date', formattedDate);
-      console.log('API request for date:', formattedDate);
+      // Validate and format date properly
+      const dateObj = new Date(params.date);
+      if (!isNaN(dateObj.getTime())) {
+        const formattedDate = dateObj.toISOString().split('T')[0];
+        queryParams.append('date', formattedDate);
+        console.log('API request for date:', formattedDate, 'from input:', params.date);
+      } else {
+        console.error('Invalid date provided to API:', params.date);
+        // Use today's date as fallback
+        const today = new Date().toISOString().split('T')[0];
+        queryParams.append('date', today);
+        console.log('Using fallback date:', today);
+      }
     }
     if (params?.employeeId) queryParams.append('employeeId', params.employeeId);
     if (params?.month) queryParams.append('month', params.month);
@@ -266,76 +275,6 @@ export const settingsAPI = {
     apiRequest('/settings/location'),
 };
 
-// Salary API
-export const salaryAPI = {
-  getSettings: () =>
-    apiRequest('/salary/settings'),
-
-  updateSettings: (data: {
-    absentDeduction: number;
-    leaveDeduction: number;
-    lateDeduction: number;
-    earlyLeaveDeduction: number;
-    lateBlockMinutes: number;
-    earlyLeaveBlockMinutes: number;
-  }) =>
-    apiRequest('/salary/settings', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-
-  calculateSalary: (data: {
-    employeeId: string;
-    month: number;
-    year: number;
-  }) =>
-    apiRequest('/salary/calculate', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  calculateAllSalaries: (data: {
-    month: number;
-    year: number;
-  }) =>
-    apiRequest('/salary/calculate-all', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  getCalculations: (params?: {
-    month?: number;
-    year?: number;
-    employeeId?: string;
-  }) => {
-    const queryParams = new URLSearchParams();
-    if (params?.month) queryParams.append('month', params.month.toString());
-    if (params?.year) queryParams.append('year', params.year.toString());
-    if (params?.employeeId) queryParams.append('employeeId', params.employeeId);
-    
-    return apiRequest(`/salary/calculations?${queryParams.toString()}`);
-  },
-
-  getCalculationById: (id: string) =>
-    apiRequest(`/salary/calculations/${id}`),
-
-  deleteCalculation: (id: string) =>
-    apiRequest(`/salary/calculations/${id}`, {
-      method: 'DELETE',
-    }),
-
-  getSummary: (params?: {
-    month?: number;
-    year?: number;
-  }) => {
-    const queryParams = new URLSearchParams();
-    if (params?.month) queryParams.append('month', params.month.toString());
-    if (params?.year) queryParams.append('year', params.year.toString());
-    
-    return apiRequest(`/salary/summary?${queryParams.toString()}`);
-  },
-};
-
 // RFID Devices API
 export const rfidDevicesAPI = {
   getAll: (params?: { search?: string; page?: number; limit?: number }) => {
@@ -440,6 +379,87 @@ export const divisionsAPI = {
   delete: (id: string) =>
     apiRequest(`/divisions/${id}`, {
       method: 'DELETE',
+    }),
+};
+
+// Salary API
+export const salaryAPI = {
+  getAll: (params?: { period?: string; employeeId?: string; status?: string; page?: number; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.employeeId) queryParams.append('employeeId', params.employeeId);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    
+    return apiRequest(`/salary?${queryParams.toString()}`);
+  },
+
+  getById: (id: string) =>
+    apiRequest(`/salary/${id}`),
+
+  calculate: (data: { employeeId: string; period: string }) =>
+    apiRequest('/salary/calculate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  calculateAll: (data: { period: string }) =>
+    apiRequest('/salary/calculate-all', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateStatus: (id: string, data: { status: string }) =>
+    apiRequest(`/salary/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  preview: (data: { employeeId: string; period: string }) =>
+    apiRequest('/salary/preview', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getBreakdown: (id: string) =>
+    apiRequest(`/salary/${id}/breakdown`),
+  getPeriods: () =>
+    apiRequest('/salary/periods'),
+
+  getReport: (id: string) =>
+    apiRequest(`/salary/${id}/report`),
+
+  getByEmployee: (employeeId: string, params?: { period?: string; status?: string; page?: number; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    
+    return apiRequest(`/salary/employee/${employeeId}?${queryParams.toString()}`);
+  },
+};
+
+// Salary Settings API
+export const salarySettingsAPI = {
+  get: () =>
+    apiRequest('/salary-settings'),
+
+  update: (data: {
+    absentDeduction: number;
+    leaveDeduction: number;
+    lateDeduction: number;
+    earlyLeaveDeduction: number;
+    lateTimeBlock: number;
+    earlyLeaveTimeBlock: number;
+    workingDaysPerWeek: number[];
+    salaryPaymentDate: number;
+    holidays: string[];
+  }) =>
+    apiRequest('/salary-settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
     }),
 };
 

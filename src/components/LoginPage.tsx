@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, QrCode, Camera, StopCircle, AlertCircle } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +14,27 @@ const LoginPage: React.FC = () => {
   const [html5QrCode, setHtml5QrCode] = useState<Html5Qrcode | null>(null);
   
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    const authState = sessionStorage.getItem('auth-state');
+    if (authState) {
+      try {
+        const parsedAuthState = JSON.parse(authState);
+        if (parsedAuthState.isAuthenticated) {
+          if (parsedAuthState.userType === 'admin') {
+            navigate('/admin/dashboard', { replace: true });
+          } else if (parsedAuthState.userType === 'user') {
+            navigate('/user/dashboard', { replace: true });
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing auth state:', error);
+      }
+    }
+  }, [navigate]);
 
   // Cleanup QR scanner on component unmount or when switching login types
   useEffect(() => {
@@ -43,6 +65,7 @@ const LoginPage: React.FC = () => {
     
     try {
       await login('admin', { username, password });
+      // Navigation is handled in AuthContext
     } catch (error: any) {
       setError(error.message || 'Login failed');
     } finally {
@@ -76,6 +99,7 @@ const LoginPage: React.FC = () => {
           
           try {
             await login('user', decodedText);
+            // Navigation is handled in AuthContext
             await stopQRScanning();
           } catch (error: any) {
             setError(error.message || 'QR Code tidak terdaftar dalam sistem');

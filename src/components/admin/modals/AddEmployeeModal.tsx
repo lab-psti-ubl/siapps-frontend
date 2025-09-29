@@ -127,38 +127,38 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     });
   };
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-800">Tambah Pegawai Baru</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800">Tambah Pegawai Baru</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 touch-target"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Nama Lengkap
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Jabatan
               </label>
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <select
                   value={formData.divisionId}
                   onChange={(e) => {
@@ -169,7 +169,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                       position: selectedDivision ? selectedDivision.name : formData.position
                     });
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                   required
                 >
                   <option value="">Pilih Divisi/Jabatan</option>
@@ -191,13 +191,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Shift Kerja
               </label>
               <select
                 value={formData.workShiftId}
                 onChange={(e) => onFormDataChange({ ...formData, workShiftId: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               >
                 <option value="">Pilih Shift Kerja</option>
@@ -215,46 +215,46 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Nomor Telepon
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => onFormDataChange({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 NIK
               </label>
               <input
                 type="text"
                 value={formData.nik}
                 onChange={(e) => onFormDataChange({ ...formData, nik: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Tempat Lahir
               </label>
               <input
                 type="text"
                 value={formData.birthPlace}
                 onChange={(e) => onFormDataChange({ ...formData, birthPlace: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Tanggal Lahir
               </label>
               <input
@@ -262,46 +262,46 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 value={formData.birthDate}
                 onChange={(e) => onFormDataChange({ ...formData, birthDate: e.target.value })}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Gaji Pokok
               </label>
               <input
                 type="number"
                 value={formData.basicSalary}
                 onChange={(e) => onFormDataChange({ ...formData, basicSalary: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                 required
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 RFID GUID (Opsional)
               </label>
-              <div className="space-y-3">
-                <div className="flex space-x-2">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
                   <input
                     type="text"
                     value={formData.rfidGuid}
                     onChange={(e) => onFormDataChange({ ...formData, rfidGuid: e.target.value })}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
                     placeholder="Tap kartu RFID atau masukkan manual (contoh: 5a2a0ac)"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCardSelector(!showCardSelector)}
-                    className="flex items-center space-x-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors min-h-[40px] sm:min-h-[44px] whitespace-nowrap text-sm sm:text-base"
                   >
-                    <Wifi className="w-4 h-4" />
+                    <Wifi className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>Pilih Kartu</span>
                     {unregisteredCards.length > 0 && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                         {unregisteredCards.length}
                       </span>
                     )}
@@ -310,56 +310,56 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 
                 {/* Unregistered Cards Selector */}
                 {showCardSelector && (
-                  <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                  <div className="border border-gray-300 rounded-lg p-2 sm:p-3 lg:p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-gray-800">Kartu RFID yang Belum Terdaftar</h4>
+                      <h4 className="font-medium text-gray-800 text-sm sm:text-base">Kartu RFID yang Belum Terdaftar</h4>
                       <button
                         type="button"
                         onClick={loadUnregisteredCards}
                         disabled={isLoadingCards}
-                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
+                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs sm:text-sm min-h-[32px] touch-target"
                       >
-                        <RefreshCw className={`w-4 h-4 ${isLoadingCards ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${isLoadingCards ? 'animate-spin' : ''}`} />
                         <span>Refresh</span>
                       </button>
                     </div>
                     
                     {isLoadingCards ? (
-                      <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-                        <p className="text-sm text-gray-600 mt-2">Memuat kartu...</p>
+                      <div className="text-center py-3 sm:py-4">
+                        <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-2">Memuat kartu...</p>
                       </div>
                     ) : unregisteredCards.length === 0 ? (
-                      <div className="text-center py-6">
-                        <Wifi className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                        <p className="text-sm text-gray-600 mb-2">Belum ada kartu RFID yang di-tap</p>
+                      <div className="text-center py-4 sm:py-6">
+                        <Wifi className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-gray-300" />
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Belum ada kartu RFID yang di-tap</p>
                         <p className="text-xs text-gray-500">
                           Tap kartu RFID pada alat yang terdaftar untuk menampilkan GUID di sini
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                      <div className="space-y-2 max-h-32 sm:max-h-40 overflow-y-auto">
                         {unregisteredCards.map((card, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors space-y-2 sm:space-y-0"
                           >
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-1">
-                                <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                                <code className="text-xs sm:text-sm font-mono bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
                                   {card.guid}
                                 </code>
                                 <span className="text-xs text-gray-500">
                                   {formatTimestamp(card.timestamp)}
                                 </span>
                               </div>
-                              <div className="flex items-center space-x-4 text-xs text-gray-600">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 lg:gap-4 text-xs text-gray-600">
                                 <div className="flex items-center space-x-1">
-                                  <Wifi className="w-3 h-3" />
+                                  <Wifi className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                   <span>{card.deviceName}</span>
                                 </div>
                                 <div className="flex items-center space-x-1">
-                                  <MapPin className="w-3 h-3" />
+                                  <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                   <span>{card.deviceLocation}</span>
                                 </div>
                               </div>
@@ -367,7 +367,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                             <button
                               type="button"
                               onClick={() => selectCard(card)}
-                              className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                              className="px-2 sm:px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors min-h-[28px] sm:min-h-[32px] flex items-center justify-center"
                             >
                               Pilih
                             </button>
@@ -378,23 +378,23 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   </div>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1 sm:mt-2">
                 GUID kartu RFID akan muncul di daftar "Pilih Kartu" ketika kartu ditap pada alat yang terdaftar
               </p>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-3 sm:pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 sm:py-2.5 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 min-h-[40px] sm:min-h-[44px] text-sm sm:text-base"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="px-4 py-2 sm:py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 min-h-[40px] sm:min-h-[44px] text-sm sm:text-base"
             >
               Simpan
             </button>

@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Clock, AlertCircle, Database, RefreshCw, CheckCircle, MapPin, Building, Users } from 'lucide-react';
+import { Save, Clock, AlertCircle, Database, RefreshCw, CheckCircle, MapPin, Building, Users, Menu, DollarSign, Calendar } from 'lucide-react';
 import { WorkSettings, Division, WorkShift } from '../types';
 import { settingsAPI, divisionsAPI, workShiftsAPI } from '../../../services/api';
 import WorkTimeSettingsTab from '../components/WorkTimeSettingsTab';
 import LocationSettingsTab from '../components/LocationSettingsTab';
 import DivisionSettingsTab from '../components/DivisionSettingsTab';
+import WorkDaysSettingsTab from '../components/WorkDaysSettingsTab';
 
 interface SettingsViewProps {
   onSettingsUpdate: () => void;
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ onSettingsUpdate }) => {
-  const [activeTab, setActiveTab] = useState<'worktime' | 'location' | 'divisions'>('worktime');
+  const [activeTab, setActiveTab] = useState<'worktime' | 'location' | 'divisions' | 'workdays'>('worktime');
   const [settings, setSettings] = useState<WorkSettings>({
     checkInTime: "08:00",
     checkOutTime: "17:00",
@@ -115,7 +116,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onSettingsUpdate }) => {
     onSettingsUpdate();
     showNotification('success', '⏰ Pengaturan jam kerja berhasil diperbarui!');
   };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -134,7 +134,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onSettingsUpdate }) => {
     <div className="space-y-6">
       {/* Notification Toast */}
       {notification.show && (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in max-w-sm">
+        <div className="fixed top-4 right-4 z-50 animate-fade-in max-w-xs sm:max-w-sm">
           <div className={`flex items-start space-x-3 px-6 py-4 rounded-xl shadow-lg border-l-4 backdrop-blur-sm ${
             notification.type === 'success' 
               ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
@@ -164,58 +164,75 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onSettingsUpdate }) => {
       )}
 
       <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Pengaturan Sistem</h1>
-        <p className="text-gray-600">Kelola pengaturan jam kerja, lokasi perusahaan, dan divisi</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">Pengaturan Sistem</h1>
+        <p className="text-sm sm:text-base text-gray-600">Kelola pengaturan jam kerja, lokasi perusahaan, dan divisi</p>
       </div>
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex flex-wrap px-3 sm:px-4 lg:px-6 overflow-x-auto">
             <button
               onClick={() => setActiveTab('worktime')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
+              className={`py-3 sm:py-4 px-2 sm:px-3 lg:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors relative whitespace-nowrap ${
                 activeTab === 'worktime'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4" />
-                <span>Pengaturan Jam Kerja</span>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">Pengaturan Jam Kerja</span>
+                <span className="md:hidden">Jam Kerja</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('location')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
+              className={`py-3 sm:py-4 px-2 sm:px-3 lg:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors relative whitespace-nowrap ${
                 activeTab === 'location'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span>Pengaturan Lokasi</span>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">Pengaturan Lokasi</span>
+                <span className="md:hidden">Lokasi</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('divisions')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
+              className={`py-3 sm:py-4 px-2 sm:px-3 lg:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors relative whitespace-nowrap ${
                 activeTab === 'divisions'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <Building className="w-4 h-4" />
-                <span>Pengaturan Divisi</span>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Building className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">Pengaturan Divisi</span>
+                <span className="md:hidden">Divisi</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('workdays')}
+              className={`py-3 sm:py-4 px-2 sm:px-3 lg:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors relative whitespace-nowrap ${
+                activeTab === 'workdays'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">Pengaturan Hari Kerja</span>
+                <span className="md:hidden">Hari Kerja</span>
               </div>
             </button>
           </nav>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           {activeTab === 'worktime' && (
             <WorkTimeSettingsTab
               workShifts={workShifts}
@@ -235,6 +252,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onSettingsUpdate }) => {
             <DivisionSettingsTab
               divisions={divisions}
               onUpdate={handleDivisionUpdate}
+              onNotification={showNotification}
+            />
+          )}
+          
+          {activeTab === 'workdays' && (
+            <WorkDaysSettingsTab
               onNotification={showNotification}
             />
           )}

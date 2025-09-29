@@ -74,55 +74,6 @@ export interface UserNotification {
   data?: any;
 }
 
-export interface SalarySettings {
-  absentDeduction: number;
-  leaveDeduction: number;
-  lateDeduction: number;
-  earlyLeaveDeduction: number;
-  lateBlockMinutes: number;
-  earlyLeaveBlockMinutes: number;
-}
-
-export interface SalaryCalculation {
-  id: string;
-  employeeId: string;
-  employeeName: string;
-  month: string;
-  year: number;
-  basicSalary: number;
-  workingDays: number;
-  presentDays: number;
-  leaveDays: number;
-  absentDays: number;
-  totalLateMinutes: number;
-  totalEarlyLeaveMinutes: number;
-  lateBlocks: number;
-  earlyLeaveBlocks: number;
-  absentDeduction: number;
-  leaveDeduction: number;
-  lateDeduction: number;
-  earlyLeaveDeduction: number;
-  totalDeduction: number;
-  netSalary: number;
-  salarySettings: SalarySettings;
-  createdAt: string;
-}
-
-export interface SalarySummary {
-  totalEmployees: number;
-  totalBasicSalary: number;
-  totalDeductions: number;
-  totalNetSalary: number;
-  averageNetSalary: number;
-  totalPresentDays: number;
-  totalLeaveDays: number;
-  totalAbsentDays: number;
-  totalAbsentDeduction: number;
-  totalLeaveDeduction: number;
-  totalLateDeduction: number;
-  totalEarlyLeaveDeduction: number;
-}
-
 export interface RfidDevice {
   id: string;
   name: string;
@@ -152,4 +103,75 @@ export interface WorkShift {
   isActive: boolean;
   order: number;
   createdAt: string;
+}
+
+export interface SalaryRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  period: string;
+  periodStart: string;
+  periodEnd: string;
+  basicSalary: number;
+  workingDays: number;
+  attendedDays: number;
+  absentDays: number;
+  leaveDays: number;
+  lateCount: number;
+  earlyLeaveCount: number;
+  lateMinutes: number;
+  earlyLeaveMinutes: number;
+  presentDays: number;
+  deductions: {
+    absent: number;
+    leave: number;
+    late: number;
+    earlyLeave: number;
+    breakdown?: {
+      absentDays: number;
+      leaveDays: number;
+      lateBlocks: number;
+      earlyLeaveBlocks: number;
+      lateMinutes: number;
+      earlyLeaveMinutes: number;
+    };
+    total: number;
+  };
+  totalSalary: number;
+  status: 'draft' | 'finalized' | 'paid';
+  calculationMethod?: 'standard' | 'reverse_attendance';
+  attendanceBreakdown?: {
+    totalWorkingDays: number;
+    initialAbsentDays: number;
+    finalAbsentDays: number;
+    attendanceRecordsProcessed: number;
+  };
+  validationResult?: {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  };
+  calculatedAt: string;
+  finalizedAt?: string;
+  paidAt?: string;
+}
+
+export interface SalarySettings {
+  absentDeduction: number;
+  leaveDeduction: number;
+  lateDeduction: number;
+  earlyLeaveDeduction: number;
+  lateTimeBlock: number;
+  earlyLeaveTimeBlock: number;
+  workingDaysPerWeek: number[];
+  salaryPaymentDate: number;
+  holidays: string[];
+}
+
+export interface SalaryPeriod {
+  period: string;
+  label: string;
+  periodStart: string;
+  periodEnd: string;
+  paymentDate: string;
 }

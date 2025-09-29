@@ -143,7 +143,7 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <FileText className="w-6 h-6 text-blue-500" />
@@ -151,15 +151,15 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100"
+            className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-6 space-y-6">
           {/* Status Badge */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
             <div className="flex items-center space-x-3">
               <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(leaveRequest.status)}`}>
                 {getStatusText(leaveRequest.status)}
@@ -174,10 +174,10 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
           </div>
 
           {/* PDF Preview */}
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-8 shadow-inner">
-            <div className="max-w-2xl mx-auto space-y-6 font-mono text-sm leading-relaxed">
+          <div className="bg-white border-2 border-gray-300 rounded-lg p-4 lg:p-8 shadow-inner">
+            <div className="max-w-2xl mx-auto space-y-4 lg:space-y-6 font-mono text-xs lg:text-sm leading-relaxed">
               <div className="text-center">
-                <h2 className="text-lg font-bold mb-4">SURAT PENGAJUAN IZIN</h2>
+                <h2 className="text-base lg:text-lg font-bold mb-4">SURAT PENGAJUAN IZIN</h2>
               </div>
 
               <div>
@@ -249,7 +249,7 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
 
           {/* Review Section for Pending Requests */}
           {leaveRequest.status === 'pending' && (
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h4 className="text-lg font-bold text-gray-800 mb-4">Review Pengajuan</h4>
               
               <div className="space-y-4">
@@ -262,15 +262,15 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
                     onChange={(e) => setReviewNotes(e.target.value)}
                     placeholder="Tambahkan catatan untuk pengajuan ini..."
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base"
                   />
                 </div>
 
-                <div className="flex space-x-4">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <button
                     onClick={handleApprove}
                     disabled={isProcessing}
-                    className="flex items-center space-x-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105"
+                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105 min-h-[44px]"
                   >
                     {isProcessing ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -283,7 +283,7 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
                   <button
                     onClick={handleReject}
                     disabled={isProcessing}
-                    className="flex items-center space-x-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105"
+                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105 min-h-[44px]"
                   >
                     {isProcessing ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -330,7 +330,7 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
         <div className="flex justify-end p-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors min-h-[44px]"
           >
             Tutup
           </button>

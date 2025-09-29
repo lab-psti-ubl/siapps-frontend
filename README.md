@@ -4,13 +4,20 @@ Sistem absensi modern yang terintegrasi dengan database MongoDB, dilengkapi deng
 
 ## 🚀 Fitur Utama
 
+### Sistem Gaji Reverse Attendance
+- **Metode Perhitungan Unik**: Sistem menganggap semua hari kerja sebagai tidak hadir, kemudian mengurangi berdasarkan data absensi yang tercatat
+- **Akurasi Tinggi**: Memastikan tidak ada hari kerja yang terlewat dalam perhitungan
+- **Validasi Otomatis**: Sistem memvalidasi perhitungan untuk memastikan konsistensi data
+- **Laporan Detail**: Preview dan breakdown lengkap perhitungan gaji
+
 ### Admin Dashboard
 - **Manajemen Pegawai**: CRUD pegawai dengan QR Code otomatis
 - **Data Alat RFID**: Kelola alat pembaca RFID dengan MAC address
 - **Monitoring Absensi**: Real-time tracking absensi pegawai
 - **Kelola Izin**: Approve/reject pengajuan izin
+- **Manajemen Gaji**: Perhitungan gaji otomatis dengan metode reverse attendance
 - **Laporan**: Export PDF laporan absensi dan pegawai
-- **Pengaturan**: Konfigurasi jam kerja dan toleransi
+- **Pengaturan**: Konfigurasi jam kerja, lokasi, dan divisi
 
 ### User Dashboard
 - **Absensi Foto**: Check-in/out dengan selfie dan GPS validation
@@ -18,7 +25,6 @@ Sistem absensi modern yang terintegrasi dengan database MongoDB, dilengkapi deng
 - **RFID Card**: Absensi menggunakan tap kartu RFID
 - **Pengajuan Izin**: Submit leave request dengan approval workflow
 - **Riwayat**: Lihat history absensi personal
-- **Notifikasi**: Real-time updates untuk status izin
 
 ## 🛠️ Teknologi
 
@@ -138,7 +144,6 @@ npm run preview
 
 ### Settings
 - `GET /api/settings/work` - Get work settings
-- `PUT /api/settings/work` - Update work settings
 
 ## 📱 Cara Penggunaan
 
@@ -190,14 +195,42 @@ npm run preview
 
 ## 📊 Database Schema
 
+### Reverse Attendance Calculation Logic
+
+#### Metode Perhitungan:
+1. **Inisialisasi**: Semua hari kerja dalam periode dianggap tidak hadir
+2. **Pemrosesan**: Setiap data absensi mengurangi jumlah hari tidak hadir
+3. **Hasil**: Hari tidak hadir final = Total hari kerja - (Hari hadir + Hari izin)
+
+#### Contoh Perhitungan:
+```
+Periode: 5 Agustus - 4 September 2025 (23 hari kerja)
+
+Langkah 1: Inisialisasi
+- Tidak hadir = 23 hari (semua hari kerja)
+
+Langkah 2: Pemrosesan data absensi
+- Hari 1-2 (5-6 Agt): Hadir → Tidak hadir = 21 hari
+- Hari 3-4 (7-8 Agt): Hadir → Tidak hadir = 19 hari
+- Hari 5 (9 Agt): Izin → Tidak hadir = 18 hari
+- Hari 6-23: Tidak ada data → Tetap tidak hadir
+
+Hasil Akhir:
+- Hadir: 4 hari
+- Izin: 1 hari  
+- Tidak hadir: 18 hari
+- Total: 23 hari kerja ✓
+```
+
 ### Collections
 - `employees` - Data pegawai
 - `rfiddevices` - Data alat RFID
 - `attendances` - Record absensi
 - `leaverequests` - Pengajuan izin
 - `notifications` - Notifikasi user
+- `salaries` - Data gaji dengan metode reverse attendance
+- `salarysettings` - Pengaturan perhitungan gaji
 - `worksettings` - Pengaturan jam kerja
-
 ## 🚀 Deployment
 
 ### MongoDB Setup

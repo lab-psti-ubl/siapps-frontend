@@ -2,85 +2,144 @@ import React, { useState, useEffect } from 'react';
 import { 
   DollarSign, 
   Calendar, 
-  Download, 
-  TrendingUp, 
-  TrendingDown,
-  Clock,
+  Clock, 
+  TrendingDown, 
+  Download,
+  Eye,
+  Filter,
+  RefreshCw,
+  User,
   FileText,
   AlertCircle,
-  Calculator,
-  RefreshCw
+  CheckCircle
 } from 'lucide-react';
-import { User } from '../../../types/auth';
-import { SalaryCalculation } from '../types';
+import { User as UserType } from '../../../types/auth';
+import { SalaryRecord, SalaryPeriod } from '../../admin/types';
 import { salaryAPI } from '../../../services/api';
+import UserSalaryDetailModal from '../modals/UserSalaryDetailModal';
 
 interface SalaryViewProps {
-  currentUser: User;
+  currentUser: UserType;
 }
 
 const SalaryView: React.FC<SalaryViewProps> = ({ currentUser }) => {
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return now.getMonth() + 1;
+  const [salaries, setSalaries] = useState<SalaryRecord[]>([]);
+  const [periods, setPeriods] = useState<SalaryPeriod[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedSalary, setSelectedSalary] = useState<SalaryRecord | null>(null);
+  const [notification, setNotification] = useState<{ show: boolean; type: 'success' | 'error'; message: string }>({
+    show: false,
+    type: 'success',
+    message: ''
   });
-  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
-  const [salaryCalculation, setSalaryCalculation] = useState<SalaryCalculation | null>(null);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
-    setIsInitialLoading(true);
-    loadSalaryCalculation();
-  }, [selectedMonth, selectedYear, currentUser.id]);
+    loadInitialData();
+  }, []);
 
-  const loadSalaryCalculation = async () => {
+  useEffect(() => {
+    if (selectedPeriod) {
+      loadSalaries();
+    }
+  }, [selectedPeriod]);
+
+  // Auto hide notification after 4 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification(prev => ({ ...prev, show: false }));
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({
+      show: true,
+      type,
+      message
+    });
+  };
+
+  const loadInitialData = async () => {
     try {
-      const response = await salaryAPI.getCalculations({
-        month: selectedMonth,
-        year: selectedYear,
-        employeeId: currentUser.id
-      });
+      setIsLoading(true);
       
-      if (response.success && response.data.length > 0) {
-        const calculationData = {
-          ...response.data[0],
-          id: response.data[0]._id
-        };
-        setSalaryCalculation(calculationData);
-      } else {
-        setSalaryCalculation(null);
+      // Load periods
+      try {
+        const periodsResponse = await salaryAPI.getPeriods();
+        if (periodsResponse.success) {
+          setPeriods(periodsResponse.data);
+          // Set current period as default
+          if (periodsResponse.data.length > 0) {
+            setSelectedPeriod(periodsResponse.data[0].period);
+          }
+        }
+      } catch (periodsError) {
+        console.error('Error loading periods:', periodsError);
+        // Generate default periods if API fails
+        const defaultPeriods = generateDefaultPeriods();
+        setPeriods(defaultPeriods);
+        if (defaultPeriods.length > 0) {
+          setSelectedPeriod(defaultPeriods[0].period);
+        }
       }
     } catch (error) {
-      console.error('Error loading salary calculation:', error);
-      setSalaryCalculation(null);
+      console.error('Error loading initial data:', error);
+      showNotification('error', 'Gagal memuat data gaji');
     } finally {
-      setIsInitialLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleCalculateSalary = async () => {
-    setIsCalculating(true);
+  const generateDefaultPeriods = (): SalaryPeriod[] => {
+    const periods = [];
+    const now = new Date();
+    
+    for (let i = 0; i < 12; i++) {
+      const periodDate = new Date(now.getFullYear(), now.getMonth() - i, 5);
+      const period = `${periodDate.getFullYear()}-${String(periodDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      periods.push({
+        period,
+        label: periodDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }),
+        periodStart: new Date(periodDate.getFullYear(), periodDate.getMonth() - 1, 6).toISOString().split('T')[0],
+        periodEnd: new Date(periodDate.getFullYear(), periodDate.getMonth(), 5).toISOString().split('T')[0],
+        paymentDate: new Date(periodDate.getFullYear(), periodDate.getMonth(), 5).toISOString().split('T')[0]
+      });
+    }
+    
+    return periods;
+  };
+
+  const loadSalaries = async () => {
     try {
-      const response = await salaryAPI.calculateSalary({
-        employeeId: currentUser.id,
-        month: selectedMonth,
-        year: selectedYear
+      const response = await salaryAPI.getByEmployee(currentUser.id, {
+        period: selectedPeriod,
       });
       
       if (response.success) {
-        const calculationData = {
-          ...response.data,
-          id: response.data._id
-        };
-        setSalaryCalculation(calculationData);
+        const salariesData = response.data.map((salary: any) => ({
+          ...salary,
+          id: salary._id,
+          employeeId: typeof salary.employeeId === 'object' && salary.employeeId._id 
+            ? salary.employeeId._id 
+            : salary.employeeId
+        }));
+        setSalaries(salariesData);
       }
     } catch (error) {
-      console.error('Error calculating salary:', error);
-      alert('Gagal menghitung gaji. Silakan coba lagi.');
-    } finally {
-      setIsCalculating(false);
+      console.error('Error loading salaries:', error);
+      showNotification('error', 'Gagal memuat data gaji');
+      setSalaries([]);
     }
+  };
+
+  const handleViewDetail = (salary: SalaryRecord) => {
+    setSelectedSalary(salary);
+    setShowDetailModal(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -92,338 +151,386 @@ const SalaryView: React.FC<SalaryViewProps> = ({ currentUser }) => {
     }).format(amount);
   };
 
-  const formatMinutes = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}j ${mins}m`;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'finalized':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'paid':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-    return `${mins}m`;
   };
 
-  const getMonthName = (month: number) => {
-    const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-    ];
-    return months[month - 1];
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'Draft';
+      case 'finalized':
+        return 'Finalisasi';
+      case 'paid':
+        return 'Sudah Dibayar';
+      default:
+        return status;
+    }
   };
 
-  const getDeductionPercentage = () => {
-    if (!salaryCalculation) return 0;
-    return (salaryCalculation.totalDeduction / salaryCalculation.basicSalary) * 100;
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Data Gaji</h1>
-        <p className="text-gray-600">Lihat rincian perhitungan gaji Anda</p>
-      </div>
-
-      {/* Month/Year Filter */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div className="flex items-center space-x-4">
-            <Calendar className="w-5 h-5 text-blue-500" />
-            <h3 className="text-lg font-bold text-gray-800">Pilih Periode</h3>
-            
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Bulan:</label>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {getMonthName(i + 1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Tahun:</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {Array.from({ length: 5 }, (_, i) => {
-                  const year = new Date().getFullYear() - 2 + i;
-                  return (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex space-x-3">
-            <button
-              onClick={loadSalaryCalculation}
-              disabled={isInitialLoading}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isInitialLoading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-            
-            {!salaryCalculation && (
-              <button
-                onClick={handleCalculateSalary}
-                disabled={isCalculating}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-              >
-                {isCalculating ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <Calculator className="w-4 h-4" />
-                )}
-                <span>{isCalculating ? 'Menghitung...' : 'Hitung Gaji'}</span>
-              </button>
-            )}
-          </div>
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Data Gaji Saya</h1>
+          <p className="text-sm sm:text-base text-gray-600">Memuat data gaji...</p>
         </div>
-      </div>
-
-      {isInitialLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
-      ) : salaryCalculation ? (
-        <div className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100">Gaji Pokok</p>
-                  <p className="text-2xl font-bold">{formatCurrency(salaryCalculation.basicSalary)}</p>
-                </div>
-                <DollarSign className="w-10 h-10 text-blue-200" />
-              </div>
-            </div>
+      </div>
+    );
+  }
 
-            <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-100">Total Potongan</p>
-                  <p className="text-2xl font-bold">{formatCurrency(salaryCalculation.totalDeduction)}</p>
-                  <p className="text-xs text-red-200">{getDeductionPercentage().toFixed(1)}% dari gaji pokok</p>
-                </div>
-                <TrendingDown className="w-10 h-10 text-red-200" />
-              </div>
+  return (
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+      {/* Notification Toast */}
+      {notification.show && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in max-w-xs sm:max-w-sm">
+          <div className={`flex items-start space-x-3 px-6 py-4 rounded-xl shadow-lg border-l-4 backdrop-blur-sm ${
+            notification.type === 'success' 
+              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+              : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+          }`}>
+            <div className="flex-shrink-0">
+              {notification.type === 'success' ? (
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              ) : (
+                <AlertCircle className="w-6 h-6 text-red-500" />
+              )}
             </div>
-
-            <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100">Gaji Bersih</p>
-                  <p className="text-2xl font-bold">{formatCurrency(salaryCalculation.netSalary)}</p>
-                </div>
-                <TrendingUp className="w-10 h-10 text-green-200" />
-              </div>
-            </div>
-          </div>
-
-          {/* Attendance Summary */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Clock className="w-6 h-6 mr-2 text-blue-500" />
-              Ringkasan Kehadiran - {getMonthName(selectedMonth)} {selectedYear}
-            </h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-gray-600 mb-1">{salaryCalculation.workingDays}</div>
-                <div className="text-sm text-gray-800">Hari Kerja</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-green-600 mb-1">{salaryCalculation.presentDays}</div>
-                <div className="text-sm text-green-800">Hadir</div>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600 mb-1">{salaryCalculation.leaveDays}</div>
-                <div className="text-sm text-blue-800">Izin</div>
-              </div>
-              <div className="bg-red-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-red-600 mb-1">{salaryCalculation.absentDays}</div>
-                <div className="text-sm text-red-800">Tidak Hadir</div>
-              </div>
+            <div className="flex-1 min-w-0">
+              <p className={`font-semibold text-sm ${
+                notification.type === 'success' ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {notification.type === 'success' ? 'Berhasil!' : 'Gagal!'}
+              </p>
+              <p className={`text-sm mt-1 leading-relaxed ${
+                notification.type === 'success' ? 'text-green-700' : 'text-red-700'
+              }`}>
+                {notification.message}
+              </p>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Deduction Breakdown */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <TrendingDown className="w-6 h-6 mr-2 text-red-500" />
-              Rincian Potongan Gaji
-            </h3>
-            
-            <div className="space-y-4">
-              {/* Absent Deduction */}
-              <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-                <div>
-                  <p className="font-medium text-red-800">Potongan Tidak Hadir</p>
-                  <p className="text-sm text-red-600">
-                    {salaryCalculation.absentDays} hari × {formatCurrency(salaryCalculation.salarySettings.absentDeduction)}
-                  </p>
-                </div>
-                <div className="text-lg font-bold text-red-600">
-                  {formatCurrency(salaryCalculation.absentDeduction)}
-                </div>
-              </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">Data Gaji Saya</h1>
+        <p className="text-sm sm:text-base text-gray-600">Lihat riwayat dan detail gaji Anda</p>
+      </div>
 
-              {/* Leave Deduction */}
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div>
-                  <p className="font-medium text-blue-800">Potongan Izin</p>
-                  <p className="text-sm text-blue-600">
-                    {salaryCalculation.leaveDays} hari × {formatCurrency(salaryCalculation.salarySettings.leaveDeduction)}
-                  </p>
-                </div>
-                <div className="text-lg font-bold text-blue-600">
-                  {formatCurrency(salaryCalculation.leaveDeduction)}
-                </div>
-              </div>
-
-              {/* Late Deduction */}
-              <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div>
-                  <p className="font-medium text-yellow-800">Potongan Terlambat</p>
-                  <p className="text-sm text-yellow-600">
-                    {formatMinutes(salaryCalculation.totalLateMinutes)} = {salaryCalculation.lateBlocks} blok × {formatCurrency(salaryCalculation.salarySettings.lateDeduction)}
-                  </p>
-                </div>
-                <div className="text-lg font-bold text-yellow-600">
-                  {formatCurrency(salaryCalculation.lateDeduction)}
-                </div>
-              </div>
-
-              {/* Early Leave Deduction */}
-              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                <div>
-                  <p className="font-medium text-orange-800">Potongan Pulang Cepat</p>
-                  <p className="text-sm text-orange-600">
-                    {formatMinutes(salaryCalculation.totalEarlyLeaveMinutes)} = {salaryCalculation.earlyLeaveBlocks} blok × {formatCurrency(salaryCalculation.salarySettings.earlyLeaveDeduction)}
-                  </p>
-                </div>
-                <div className="text-lg font-bold text-orange-600">
-                  {formatCurrency(salaryCalculation.earlyLeaveDeduction)}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
-                <div>
-                  <p className="font-bold text-gray-800 text-lg">Total Potongan</p>
-                  <p className="text-sm text-gray-600">
-                    {getDeductionPercentage().toFixed(1)}% dari gaji pokok
-                  </p>
-                </div>
-                <div className="text-xl font-bold text-red-600">
-                  {formatCurrency(salaryCalculation.totalDeduction)}
-                </div>
-              </div>
-            </div>
+      {/* Employee Info Card */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-xl p-4 sm:p-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <User className="w-6 h-6 sm:w-8 sm:h-8" />
           </div>
-
-          {/* Final Calculation */}
-          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-bold mb-4 flex items-center">
-              <Calculator className="w-6 h-6 mr-2" />
-              Perhitungan Akhir
-            </h3>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-green-100">Gaji Pokok:</span>
-                <span className="font-bold text-lg">{formatCurrency(salaryCalculation.basicSalary)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-green-100">Total Potongan:</span>
-                <span className="font-bold text-lg">-{formatCurrency(salaryCalculation.totalDeduction)}</span>
-              </div>
-              <hr className="border-green-400" />
-              <div className="flex items-center justify-between">
-                <span className="text-green-100 text-lg">Gaji Bersih:</span>
-                <span className="font-bold text-2xl">{formatCurrency(salaryCalculation.netSalary)}</span>
-              </div>
-            </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold">{currentUser.name}</h2>
+            <p className="text-blue-100 text-sm sm:text-base">{currentUser.position || 'Pegawai'}</p>
+            <p className="text-blue-200 text-xs sm:text-sm">ID: {currentUser.qrId || currentUser.id}</p>
           </div>
+        </div>
+      </div>
 
-          {/* Download Slip */}
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Download Slip Gaji</h3>
-            <button
-              onClick={() => {
-                try {
-                  const { generateSalarySlipPDF } = require('../../../utils/salaryPdfUtils');
-                  generateSalarySlipPDF({
-                    calculation: salaryCalculation
-                  });
-                } catch (error) {
-                  console.error('Error generating salary slip:', error);
-                  alert('Terjadi kesalahan saat membuat slip gaji. Silakan coba lagi.');
-                }
-              }}
-              className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors shadow-md hover:shadow-lg transform hover:scale-105 mx-auto"
+      {/* Period Filter */}
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 lg:p-6">
+        <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+          <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+          <h3 className="text-base sm:text-lg font-bold text-gray-800">Filter Periode Gaji</h3>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="flex-1">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+              Pilih Periode
+            </label>
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
             >
-              <Download className="w-5 h-5" />
-              <span>Download Slip Gaji PDF</span>
+              <option value="">Pilih Periode</option>
+              {periods.map(period => (
+                <option key={period.period} value={period.period}>
+                  {period.label} ({formatDate(period.periodStart)} - {formatDate(period.periodEnd)})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={loadSalaries}
+              className="flex items-center justify-center space-x-1 sm:space-x-2 bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base min-h-[40px] sm:min-h-[44px]"
+            >
+              <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Refresh</span>
             </button>
-            <p className="text-sm text-gray-500 mt-2">
-              Slip gaji untuk periode {getMonthName(selectedMonth)} {selectedYear}
-            </p>
           </div>
         </div>
-      ) : (
-        /* No Calculation Available */
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-          <Calculator className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">
-            Belum Ada Perhitungan Gaji
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Perhitungan gaji untuk {getMonthName(selectedMonth)} {selectedYear} belum tersedia.
-            Silakan hubungi admin atau klik tombol di bawah untuk menghitung.
-          </p>
-          
-          <button
-            onClick={handleCalculateSalary}
-            disabled={isCalculating}
-            className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105 mx-auto"
-          >
-            {isCalculating ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Menghitung Gaji...</span>
-              </>
-            ) : (
-              <>
-                <Calculator className="w-5 h-5" />
-                <span>Hitung Gaji Saya</span>
-              </>
+      </div>
+
+      {/* Salary Data */}
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden">
+        <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200">
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800">
+            Riwayat Gaji
+            {selectedPeriod && (
+              <span className="text-sm sm:text-base font-normal text-gray-600 ml-2">
+                - {periods.find(p => p.period === selectedPeriod)?.label}
+              </span>
             )}
-          </button>
-          
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start space-x-3">
-              <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <div className="text-left">
-                <h4 className="font-medium text-blue-800 mb-1">Informasi</h4>
-                <p className="text-sm text-blue-700">
-                  Perhitungan gaji didasarkan pada data absensi Anda selama bulan yang dipilih. 
-                  Pastikan data absensi Anda sudah lengkap sebelum menghitung gaji.
-                </p>
+          </h3>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="block lg:hidden">
+          {salaries.length === 0 ? (
+            <div className="p-4 sm:p-6 text-center">
+              <div className="flex flex-col items-center space-y-3">
+                <DollarSign className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300" />
+                <div>
+                  <p className="text-sm sm:text-base font-medium text-gray-900">
+                    {selectedPeriod ? 'Belum ada data gaji untuk periode ini' : 'Pilih periode untuk melihat data gaji'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    {selectedPeriod 
+                      ? 'Data gaji akan muncul setelah admin menghitung gaji untuk periode ini'
+                      : 'Pilih periode gaji dari dropdown di atas'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3 sm:p-4 space-y-3">
+              {salaries.map((salary) => (
+                <div key={salary.id} className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200 hover:border-green-300 transition-colors">
+                  {/* Salary Header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                        <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm sm:text-base font-semibold text-gray-900">Gaji {salary.period}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          {formatDate(salary.periodStart)} - {formatDate(salary.periodEnd)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(salary.status)}`}>
+                      {getStatusText(salary.status)}
+                    </span>
+                  </div>
+
+                  {/* Salary Details */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 text-xs sm:text-sm">
+                    <div>
+                      <p className="text-gray-500">Gaji Pokok</p>
+                      <p className="font-semibold text-gray-900">{formatCurrency(salary.basicSalary)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Total Gaji</p>
+                      <p className="font-bold text-green-600">{formatCurrency(salary.totalSalary)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Hari Kerja</p>
+                      <p className="font-medium text-gray-900">{salary.attendedDays}/{salary.workingDays}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Potongan</p>
+                      <p className="font-medium text-red-600">{formatCurrency(salary.deductions.total)}</p>
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button
+                    onClick={() => handleViewDetail(salary)}
+                    className="w-full flex items-center justify-center space-x-2 p-2 sm:p-3 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-xs sm:text-sm font-medium min-h-[36px] sm:min-h-[40px]"
+                  >
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>Lihat Detail</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-green-50 to-emerald-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Periode
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Gaji Pokok
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Hari Kerja
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Potongan
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Total Gaji
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {salaries.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center space-y-3">
+                      <DollarSign className="w-16 h-16 text-gray-300" />
+                      <div>
+                        <p className="text-lg font-medium text-gray-900">
+                          {selectedPeriod ? 'Belum ada data gaji untuk periode ini' : 'Pilih periode untuk melihat data gaji'}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {selectedPeriod 
+                            ? 'Data gaji akan muncul setelah admin menghitung gaji untuk periode ini'
+                            : 'Pilih periode gaji dari dropdown di atas'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                salaries.map((salary, index) => (
+                  <tr 
+                    key={salary.id} 
+                    className={`hover:bg-green-50 transition-colors ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{salary.period}</div>
+                      <div className="text-xs text-gray-500">
+                        {formatDate(salary.periodStart)} - {formatDate(salary.periodEnd)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{formatCurrency(salary.basicSalary)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        <span className="font-medium">{salary.attendedDays}</span>
+                        <span className="text-gray-500">/{salary.workingDays}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Absen: {salary.absentDays}, Izin: {salary.leaveDays}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-red-600">{formatCurrency(salary.deductions.total)}</div>
+                      <div className="text-xs text-gray-500">
+                        {salary.deductions.total > 0 && (
+                          <span>Terlambat: {salary.lateCount}x, Pulang Cepat: {salary.earlyLeaveCount}x</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-bold text-green-600">{formatCurrency(salary.totalSalary)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(salary.status)}`}>
+                        {getStatusText(salary.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleViewDetail(salary)}
+                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-100 rounded-lg transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                        title="Lihat Detail"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Table Footer with Summary */}
+        {salaries.length > 0 && (
+          <div className="bg-gray-50 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-t border-gray-200">
+            <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 text-xs sm:text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 lg:gap-6">
+                <span>Total Record: <strong>{salaries.length}</strong></span>
+                <span>Total Gaji: <strong>{formatCurrency(salaries.reduce((sum, s) => sum + s.totalSalary, 0))}</strong></span>
+                <span className="hidden sm:inline">Total Potongan: <strong>{formatCurrency(salaries.reduce((sum, s) => sum + s.deductions.total, 0))}</strong></span>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-500">
+                Data gaji dihitung menggunakan metode Reverse Attendance
               </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-blue-800 mb-2">Informasi Data Gaji</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• Data gaji dihitung berdasarkan absensi dan pengaturan yang ditetapkan admin</li>
+              <li>• Sistem menggunakan metode Reverse Attendance untuk perhitungan yang akurat</li>
+              <li>• Status "Draft" berarti gaji masih dalam tahap perhitungan</li>
+              <li>• Status "Finalisasi" berarti gaji sudah dikonfirmasi dan siap dibayar</li>
+              <li>• Status "Sudah Dibayar" berarti gaji sudah ditransfer</li>
+              <li>• Klik "Lihat Detail" untuk melihat breakdown lengkap perhitungan gaji</li>
+            </ul>
+          </div>
         </div>
+      </div>
+
+      {/* Salary Detail Modal */}
+      {showDetailModal && selectedSalary && (
+        <UserSalaryDetailModal
+          salary={selectedSalary}
+          currentUser={currentUser}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedSalary(null);
+          }}
+          formatCurrency={formatCurrency}
+          formatDate={formatDate}
+        />
       )}
     </div>
   );
